@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,21 +9,106 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { v4 as uuidv4 } from 'uuid';
 
-export default function CreatePollPage() {
+interface PollOption {
+  id: string;
+  text: string;
+  poll_id: string;
+}
+
+interface Poll {
+  id: string;
+  title: string;
+  description: string;
+  created_at: string;
+  end_date?: string;
+  user_id: string;
+  options: PollOption[];
+}
+
+export default function EditPollPage() {
   const router = useRouter();
+  const params = useParams();
+  const pollId = params.id as string;
+  
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [options, setOptions] = useState(["", ""]);
-  const [category, setCategory] = useState("Technology");
-  const [allowMultipleVotes, setAllowMultipleVotes] = useState(false);
+  const [options, setOptions] = useState<{ id?: string; text: string; isNew?: boolean }[]>([]);
   const [endDate, setEndDate] = useState<string>("");
+  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchPoll();
+  }, [pollId]);
+
+  const fetchPoll = async () => {
+    try {
+      const supabase = createClient();
+      
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+
+      // Fetch poll
+      const { data: pollData, error: pollError } = await supabase
+        .from('polls')
+        .select('*')
+        .eq('id', pollId)
+        .single();
+
+      if (pollError) {
+        console.error('Error fetching poll:', pollError);
+        alert('Error loading poll');
+        router.push('/polls');
+        return;
+      }
+
+      if (!pollData) {
+        alert('Poll not found');
+        router.push('/polls');
+        return;
+      }
+
+      // Fetch options for this poll
+      const { data: optionsData, error: optionsError } = await supabase
+        .from('options')
+        .select('*')
+        .eq('poll_id', pollId);
+
+      if (optionsError) {
+        console.error('Error fetching options:', optionsError);
+        alert('Error loading poll options');
+        router.push('/polls');
+        return;
+      }
+
+      // Check if user owns this poll (with development mode fallback)
+      const isOwner = pollData.user_id === (user?.id || 'mock-user-id') || 
+                     process.env.NODE_ENV === 'development';
+      
+      if (!isOwner) {
+        alert('You can only edit your own polls');
+        router.push('/polls');
+        return;
+      }
+
+      setTitle(pollData.title);
+      setDescription(pollData.description);
+      setEndDate(pollData.end_date || "");
+      setOptions(optionsData?.map(opt => ({ id: opt.id, text: opt.text })) || []);
+    } catch (error) {
+      console.error('Error fetching poll:', error);
+      alert('Error loading poll');
+      router.push('/polls');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const addOption = () => {
-    setOptions([...options, ""]);
+    setOptions([...options, { text: "", isNew: true }]);
   };
 
   const removeOption = (index: number) => {
@@ -34,7 +119,7 @@ export default function CreatePollPage() {
 
   const updateOption = (index: number, value: string) => {
     const newOptions = [...options];
-    newOptions[index] = value;
+    newOptions[index] = { ...newOptions[index], text: value };
     setOptions(newOptions);
   };
 
@@ -42,73 +127,96 @@ export default function CreatePollPage() {
     e.preventDefault();
     
     // Validate form
-    if (!title.trim() || !description.trim() || options.some(opt => !opt.trim())) {
+    if (!title.trim() || !description.trim() || options.some(opt => !opt.text.trim())) {
       alert("Please fill in all fields");
       return;
     }
 
     setIsSubmitting(true);
 
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    // Use real user ID or generate a UUID for mock user
-    const userId = user?.id || uuidv4();
-
     try {
-      const { data: poll, error } = await supabase
+      const supabase = createClient();
+
+      // Update poll
+      const { error: pollError } = await supabase
         .from("polls")
-        .insert({
+        .update({
           title,
           description,
-          user_id: userId,
           end_date: endDate || null,
         })
-        .select()
-        .single();
+        .eq('id', pollId);
 
-      if (error) {
-        throw error;
+      if (pollError) {
+        throw pollError;
       }
 
-      if (poll && options.length > 0) {
-        const optionInserts = options.filter(opt => opt.trim()).map((opt) => ({
-          poll_id: poll.id,
-          text: opt,
-        }));
+      // Handle options
+      const existingOptions = options.filter(opt => opt.id && !opt.isNew);
+      const newOptions = options.filter(opt => opt.isNew && opt.text.trim());
+      const removedOptions = options.filter(opt => opt.id && !existingOptions.find(eo => eo.id === opt.id));
 
-        const { error: optionsError } = await supabase
-          .from("options")
-          .insert(optionInserts);
-
-        if (optionsError) {
-          throw optionsError;
+      // Delete removed options
+      for (const option of removedOptions) {
+        if (option.id) {
+          await supabase
+            .from("options")
+            .delete()
+            .eq('id', option.id);
         }
       }
 
-      // Show success message
-      setShowSuccess(true);
-      setIsSubmitting(false);
-      
-      // Redirect to polls page after 2 seconds
-      setTimeout(() => {
-        router.push("/polls");
-      }, 2000);
+      // Update existing options
+      for (const option of existingOptions) {
+        if (option.id) {
+          await supabase
+            .from("options")
+            .update({ text: option.text })
+            .eq('id', option.id);
+        }
+      }
+
+      // Add new options
+      if (newOptions.length > 0) {
+        const optionInserts = newOptions.map((opt) => ({
+          poll_id: pollId,
+          text: opt.text,
+        }));
+
+        await supabase
+          .from("options")
+          .insert(optionInserts);
+      }
+
+      alert("Poll updated successfully!");
+      router.push("/polls");
     } catch (error: any) {
-      console.error("Error creating poll:", error);
-      alert(`Error creating poll: ${error.message}`);
+      console.error("Error updating poll:", error);
+      alert(`Error updating poll: ${error.message}`);
+    } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading poll...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight">Create New Poll</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Edit Poll</h1>
             <p className="text-muted-foreground">
-              Create a new poll to gather feedback from your community
+              Update your poll details and options
             </p>
           </div>
 
@@ -116,7 +224,7 @@ export default function CreatePollPage() {
             <CardHeader>
               <CardTitle>Poll Details</CardTitle>
               <CardDescription>
-                Fill in the details for your new poll
+                Update the details for your poll
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -145,21 +253,6 @@ export default function CreatePollPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <select
-                    id="category"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full p-2 border border-input rounded-md bg-background"
-                  >
-                    <option value="Technology">Technology</option>
-                    <option value="Product">Product</option>
-                    <option value="Fun">Fun</option>
-                    <option value="Team">Team</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="endDate">End Date (Optional)</Label>
                   <Input
                     id="endDate"
@@ -174,7 +267,7 @@ export default function CreatePollPage() {
                   {options.map((option, index) => (
                     <div key={index} className="flex gap-2">
                       <Input
-                        value={option}
+                        value={option.text}
                         onChange={(e) => updateOption(index, e.target.value)}
                         placeholder={`Option ${index + 1}`}
                         required
@@ -202,19 +295,6 @@ export default function CreatePollPage() {
                   </Button>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="multiple-votes"
-                    checked={allowMultipleVotes}
-                    onChange={(e) => setAllowMultipleVotes(e.target.checked)}
-                    className="rounded"
-                  />
-                  <Label htmlFor="multiple-votes">
-                    Allow multiple votes per user
-                  </Label>
-                </div>
-
                 <div className="flex gap-4">
                   <Button
                     type="button"
@@ -225,23 +305,10 @@ export default function CreatePollPage() {
                     Cancel
                   </Button>
                   <Button type="submit" className="flex-1" disabled={isSubmitting}>
-                    {isSubmitting ? "Creating..." : "Create Poll"}
+                    {isSubmitting ? "Updating..." : "Update Poll"}
                   </Button>
                 </div>
               </form>
-              {showSuccess && (
-                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center justify-center text-green-700">
-                      <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span className="font-medium">Poll created successfully!</span>
-                    </div>
-                    <p className="text-center text-green-600 mt-1">
-                      Redirecting to polls page...
-                    </p>
-                  </div>
-                )}
             </CardContent>
           </Card>
         </div>

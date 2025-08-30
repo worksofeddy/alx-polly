@@ -1,4 +1,4 @@
-import { Poll } from "@/types/poll";
+import { Poll } from "@/src/types/poll";
 
 export const samplePolls: Poll[] = [
   {

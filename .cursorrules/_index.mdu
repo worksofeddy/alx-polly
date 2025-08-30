@@ -1,0 +1,22 @@
+Project: alx-polly (Next.js App Router + TypeScript + Tailwind + Supabase)
+
+High-priority rules
+- Prefer server components; mark client ones with "use client" only when needed (hooks/DOM APIs).
+- Keep shared UI in `components/ui/`, auth UI in `src/components/auth/`, contexts in `src/contexts/`, Supabase client in `lib/supabase/`.
+- Use explicit types on exported APIs; avoid `any`.
+- Match existing ESLint/Prettier formatting and indentation; avoid unrelated refactors.
+- Early returns over deep nesting; handle errors explicitly.
+- Do not commit secrets; only use `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` locally and in deploy env.
+- Prefer server actions for DB mutations when possible.
+- Ensure accessibility: labels, focus states, keyboard navigation, contrast.
+
+Scope notes
+- Polls live under `app/polls/`.
+- Auth routes/components live under `app/auth/` and `src/components/auth/`.
+
+PR guidance
+- Keep edits minimal and focused. Include a short summary and screenshots for UI changes.
+
+See details
+- @project-spec.mdu (authoritative)
+- `.cursorrules/project-spec.mdu` for stack, structure, commands, and conventions.
