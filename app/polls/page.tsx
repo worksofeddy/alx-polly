@@ -56,6 +56,11 @@ export default function PollsPage() {
               🙏 Thank You Demo
             </Button>
           </Link>
+          <Link href="/troubleshooting">
+            <Button variant="outline" className="flex items-center gap-2">
+              🔧 Troubleshooting
+            </Button>
+          </Link>
           <Link href="/polls/create">
             <Button className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
@@ -131,18 +136,27 @@ export default function PollsPage() {
                     View & Vote
                   </Button>
                 </Link>
-                {poll.createdBy === "alx_admin" && (
-                  <>
-                    <Link href={`/polls/${poll.id}/edit`}>
-                      <Button variant="outline" size="sm">
-                        Edit
-                      </Button>
-                    </Link>
-                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                      Delete
-                    </Button>
-                  </>
-                )}
+                                 {(poll.createdBy === "alx_admin" || process.env.NODE_ENV === 'development') && (
+                   <>
+                     <Link href={`/polls/${poll.id}/edit`}>
+                       <Button variant="outline" size="sm">
+                         Edit
+                       </Button>
+                     </Link>
+                     <Button 
+                       variant="outline" 
+                       size="sm" 
+                       className="text-red-600 hover:text-red-700"
+                       onClick={() => {
+                         if (confirm('Are you sure you want to delete this poll?')) {
+                           alert('Poll deleted successfully! (Demo)');
+                         }
+                       }}
+                     >
+                       Delete
+                     </Button>
+                   </>
+                 )}
               </div>
             </CardContent>
           </Card>

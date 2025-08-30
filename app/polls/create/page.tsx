@@ -7,9 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, X } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { v4 as uuidv4 } from 'uuid';
+import { Plus, X, CheckCircle } from "lucide-react";
 
 export default function CreatePollPage() {
   const router = useRouter();
@@ -49,42 +47,16 @@ export default function CreatePollPage() {
 
     setIsSubmitting(true);
 
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    // Use real user ID or generate a UUID for mock user
-    const userId = user?.id || uuidv4();
-
     try {
-      const { data: poll, error } = await supabase
-        .from("polls")
-        .insert({
-          title,
-          description,
-          user_id: userId,
-          end_date: endDate || null,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      if (poll && options.length > 0) {
-        const optionInserts = options.filter(opt => opt.trim()).map((opt) => ({
-          poll_id: poll.id,
-          text: opt,
-        }));
-
-        const { error: optionsError } = await supabase
-          .from("options")
-          .insert(optionInserts);
-
-        if (optionsError) {
-          throw optionsError;
-        }
-      }
+      // Simulate creating a poll (in real app, this would insert into database)
+      console.log("Creating poll:", {
+        title,
+        description,
+        options: options.filter(opt => opt.trim()),
+        category,
+        allowMultipleVotes,
+        endDate
+      });
 
       // Show success message
       setShowSuccess(true);
@@ -101,150 +73,148 @@ export default function CreatePollPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background">
+  if (showSuccess) {
+    return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight">Create New Poll</h1>
-            <p className="text-muted-foreground">
-              Create a new poll to gather feedback from your community
-            </p>
-          </div>
-
           <Card>
-            <CardHeader>
-              <CardTitle>Poll Details</CardTitle>
-              <CardDescription>
-                Fill in the details for your new poll
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Poll Title</Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="What's your favorite programming language?"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Provide more context about your poll..."
-                    rows={3}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <select
-                    id="category"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full p-2 border border-input rounded-md bg-background"
-                  >
-                    <option value="Technology">Technology</option>
-                    <option value="Product">Product</option>
-                    <option value="Fun">Fun</option>
-                    <option value="Team">Team</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="endDate">End Date (Optional)</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <Label>Poll Options</Label>
-                  {options.map((option, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={option}
-                        onChange={(e) => updateOption(index, e.target.value)}
-                        placeholder={`Option ${index + 1}`}
-                        required
-                      />
-                      {options.length > 2 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => removeOption(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addOption}
-                    className="w-full"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Option
-                  </Button>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="multiple-votes"
-                    checked={allowMultipleVotes}
-                    onChange={(e) => setAllowMultipleVotes(e.target.checked)}
-                    className="rounded"
-                  />
-                  <Label htmlFor="multiple-votes">
-                    Allow multiple votes per user
-                  </Label>
-                </div>
-
-                <div className="flex gap-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => router.push("/polls")}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="flex-1" disabled={isSubmitting}>
-                    {isSubmitting ? "Creating..." : "Create Poll"}
-                  </Button>
-                </div>
-              </form>
-              {showSuccess && (
-                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center justify-center text-green-700">
-                      <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span className="font-medium">Poll created successfully!</span>
-                    </div>
-                    <p className="text-center text-green-600 mt-1">
-                      Redirecting to polls page...
-                    </p>
-                  </div>
-                )}
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-green-800 mb-2">Poll Created Successfully!</h2>
+              <p className="text-green-600 mb-4">Your poll has been created and is now live.</p>
+              <p className="text-sm text-gray-500">Redirecting to polls page...</p>
             </CardContent>
           </Card>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Create New Poll</CardTitle>
+            <CardDescription>
+              Create a new poll for others to vote on
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Poll Title */}
+              <div className="space-y-2">
+                <Label htmlFor="title">Poll Title *</Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="What's your favorite programming language?"
+                  required
+                />
+              </div>
+
+              {/* Poll Description */}
+              <div className="space-y-2">
+                <Label htmlFor="description">Description *</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Tell us more about this poll..."
+                  rows={3}
+                  required
+                />
+              </div>
+
+              {/* Category */}
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <select
+                  id="category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="Technology">Technology</option>
+                  <option value="Business">Business</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Sports">Sports</option>
+                  <option value="Politics">Politics</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              {/* End Date */}
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date (Optional)</Label>
+                <Input
+                  id="endDate"
+                  type="datetime-local"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+
+              {/* Multiple Votes */}
+              <div className="flex items-center space-x-2">
+                <input
+                  id="multipleVotes"
+                  type="checkbox"
+                  checked={allowMultipleVotes}
+                  onChange={(e) => setAllowMultipleVotes(e.target.checked)}
+                  className="rounded"
+                />
+                <Label htmlFor="multipleVotes">Allow multiple votes per user</Label>
+              </div>
+
+              {/* Poll Options */}
+              <div className="space-y-4">
+                <Label>Poll Options *</Label>
+                {options.map((option, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <Input
+                      value={option}
+                      onChange={(e) => updateOption(index, e.target.value)}
+                      placeholder={`Option ${index + 1}`}
+                      required
+                    />
+                    {options.length > 2 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeOption(index)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addOption}
+                  className="w-full"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Option
+                </Button>
+              </div>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full"
+              >
+                {isSubmitting ? "Creating Poll..." : "Create Poll"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

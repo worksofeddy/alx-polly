@@ -7,24 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, X } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-
-interface PollOption {
-  id: string;
-  text: string;
-  poll_id: string;
-}
-
-interface Poll {
-  id: string;
-  title: string;
-  description: string;
-  created_at: string;
-  end_date?: string;
-  user_id: string;
-  options: PollOption[];
-}
+import { Plus, X, CheckCircle, ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { samplePolls } from "@/src/lib/sample-polls";
 
 export default function EditPollPage() {
   const router = useRouter();
@@ -37,7 +22,7 @@ export default function EditPollPage() {
   const [endDate, setEndDate] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     fetchPoll();
@@ -45,47 +30,17 @@ export default function EditPollPage() {
 
   const fetchPoll = async () => {
     try {
-      const supabase = createClient();
+      // Find poll from mock data
+      const foundPoll = samplePolls.find(p => p.id === pollId);
       
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUserId(user?.id || null);
-
-      // Fetch poll
-      const { data: pollData, error: pollError } = await supabase
-        .from('polls')
-        .select('*')
-        .eq('id', pollId)
-        .single();
-
-      if (pollError) {
-        console.error('Error fetching poll:', pollError);
-        alert('Error loading poll');
-        router.push('/polls');
-        return;
-      }
-
-      if (!pollData) {
+      if (!foundPoll) {
         alert('Poll not found');
         router.push('/polls');
         return;
       }
 
-      // Fetch options for this poll
-      const { data: optionsData, error: optionsError } = await supabase
-        .from('options')
-        .select('*')
-        .eq('poll_id', pollId);
-
-      if (optionsError) {
-        console.error('Error fetching options:', optionsError);
-        alert('Error loading poll options');
-        router.push('/polls');
-        return;
-      }
-
-      // Check if user owns this poll (with development mode fallback)
-      const isOwner = pollData.user_id === (user?.id || 'mock-user-id') || 
+      // Check if user owns this poll (simulate ownership for demo)
+      const isOwner = foundPoll.createdBy === "alx_admin" || 
                      process.env.NODE_ENV === 'development';
       
       if (!isOwner) {
@@ -94,10 +49,10 @@ export default function EditPollPage() {
         return;
       }
 
-      setTitle(pollData.title);
-      setDescription(pollData.description);
-      setEndDate(pollData.end_date || "");
-      setOptions(optionsData?.map(opt => ({ id: opt.id, text: opt.text })) || []);
+      setTitle(foundPoll.title);
+      setDescription(foundPoll.description);
+      setEndDate(foundPoll.expiresAt || "");
+      setOptions(foundPoll.options.map(opt => ({ id: opt.id, text: opt.text })));
     } catch (error) {
       console.error('Error fetching poll:', error);
       alert('Error loading poll');
@@ -135,183 +90,160 @@ export default function EditPollPage() {
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
+      // Simulate updating a poll (in real app, this would update the database)
+      console.log("Updating poll:", {
+        id: pollId,
+        title,
+        description,
+        options: options.filter(opt => opt.text.trim()),
+        endDate
+      });
 
-      // Update poll
-      const { error: pollError } = await supabase
-        .from("polls")
-        .update({
-          title,
-          description,
-          end_date: endDate || null,
-        })
-        .eq('id', pollId);
-
-      if (pollError) {
-        throw pollError;
-      }
-
-      // Handle options
-      const existingOptions = options.filter(opt => opt.id && !opt.isNew);
-      const newOptions = options.filter(opt => opt.isNew && opt.text.trim());
-      const removedOptions = options.filter(opt => opt.id && !existingOptions.find(eo => eo.id === opt.id));
-
-      // Delete removed options
-      for (const option of removedOptions) {
-        if (option.id) {
-          await supabase
-            .from("options")
-            .delete()
-            .eq('id', option.id);
-        }
-      }
-
-      // Update existing options
-      for (const option of existingOptions) {
-        if (option.id) {
-          await supabase
-            .from("options")
-            .update({ text: option.text })
-            .eq('id', option.id);
-        }
-      }
-
-      // Add new options
-      if (newOptions.length > 0) {
-        const optionInserts = newOptions.map((opt) => ({
-          poll_id: pollId,
-          text: opt.text,
-        }));
-
-        await supabase
-          .from("options")
-          .insert(optionInserts);
-      }
-
-      alert("Poll updated successfully!");
-      router.push("/polls");
+      // Show success message
+      setShowSuccess(true);
+      setIsSubmitting(false);
+      
+      // Redirect to polls page after 2 seconds
+      setTimeout(() => {
+        router.push("/polls");
+      }, 2000);
     } catch (error: any) {
       console.error("Error updating poll:", error);
       alert(`Error updating poll: ${error.message}`);
-    } finally {
       setIsSubmitting(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading poll...</p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">Loading poll...</div>
+      </div>
+    );
+  }
+
+  if (showSuccess) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-green-800 mb-2">Poll Updated Successfully!</h2>
+              <p className="text-green-600 mb-4">Your poll has been updated and is now live.</p>
+              <p className="text-sm text-gray-500">Redirecting to polls page...</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight">Edit Poll</h1>
-            <p className="text-muted-foreground">
+    <div className="container mx-auto px-4 py-8">
+      {/* Back Button */}
+      <div className="mb-6">
+        <Link href="/polls">
+          <Button variant="outline" className="flex items-center gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Polls
+          </Button>
+        </Link>
+      </div>
+
+      <div className="max-w-2xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Edit Poll</CardTitle>
+            <CardDescription>
               Update your poll details and options
-            </p>
-          </div>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Poll Title */}
+              <div className="space-y-2">
+                <Label htmlFor="title">Poll Title *</Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="What's your favorite programming language?"
+                  required
+                />
+              </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Poll Details</CardTitle>
-              <CardDescription>
-                Update the details for your poll
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Poll Title</Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="What's your favorite programming language?"
-                    required
-                  />
-                </div>
+              {/* Poll Description */}
+              <div className="space-y-2">
+                <Label htmlFor="description">Description *</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Tell us more about this poll..."
+                  rows={3}
+                  required
+                />
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Provide more context about your poll..."
-                    rows={3}
-                    required
-                  />
-                </div>
+              {/* End Date */}
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date (Optional)</Label>
+                <Input
+                  id="endDate"
+                  type="datetime-local"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="endDate">End Date (Optional)</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
-                </div>
+              {/* Poll Options */}
+              <div className="space-y-4">
+                <Label>Poll Options *</Label>
+                {options.map((option, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <Input
+                      value={option.text}
+                      onChange={(e) => updateOption(index, e.target.value)}
+                      placeholder={`Option ${index + 1}`}
+                      required
+                    />
+                    {options.length > 2 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeOption(index)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addOption}
+                  className="w-full"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Option
+                </Button>
+              </div>
 
-                <div className="space-y-4">
-                  <Label>Poll Options</Label>
-                  {options.map((option, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={option.text}
-                        onChange={(e) => updateOption(index, e.target.value)}
-                        placeholder={`Option ${index + 1}`}
-                        required
-                      />
-                      {options.length > 2 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => removeOption(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addOption}
-                    className="w-full"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Option
-                  </Button>
-                </div>
-
-                <div className="flex gap-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => router.push("/polls")}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="flex-1" disabled={isSubmitting}>
-                    {isSubmitting ? "Updating..." : "Update Poll"}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full"
+              >
+                {isSubmitting ? "Updating Poll..." : "Update Poll"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

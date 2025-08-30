@@ -60,9 +60,17 @@ export default function PollDetailPage() {
   const handleDeletePoll = async () => {
     if (!poll) return;
     
-    if (confirm('Are you sure you want to delete this poll?')) {
-      alert('Poll deleted successfully!');
-      router.push('/polls');
+    if (confirm('Are you sure you want to delete this poll? This action cannot be undone.')) {
+      try {
+        // Simulate deleting a poll (in real app, this would delete from database)
+        console.log("Deleting poll:", poll.id);
+        
+        alert('Poll deleted successfully!');
+        router.push('/polls');
+      } catch (error) {
+        console.error('Error deleting poll:', error);
+        alert('Error deleting poll. Please try again.');
+      }
     }
   };
 
