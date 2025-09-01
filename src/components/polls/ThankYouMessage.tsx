@@ -61,23 +61,23 @@ export function ThankYouMessage({
           {currentMessage.title}
         </h3>
         
-        <p className="text-gray-600 mb-3">
+        <p className="text-black mb-3">
           {currentMessage.subtitle}
         </p>
         
         {pollTitle && (
-          <p className="text-sm text-gray-500 mb-3">
+          <p className="text-sm text-black mb-3">
             Poll: <span className="font-medium">{pollTitle}</span>
           </p>
         )}
         
         {selectedOption && (
-          <p className="text-sm text-gray-500 mb-3">
-            Your choice: <span className="font-medium text-green-700">{selectedOption}</span>
+          <p className="text-sm text-black mb-3">
+            Your choice: <span className="font-medium text-black">{selectedOption}</span>
           </p>
         )}
         
-        <div className="text-sm text-gray-500 mb-4">
+        <div className="text-sm text-black mb-4">
           Total votes: <span className="font-semibold">{totalVotes}</span>
         </div>
       </div>

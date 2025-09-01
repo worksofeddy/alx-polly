@@ -53,17 +53,17 @@ export function VotingForm({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Poll Results</CardTitle>
+          <CardTitle className="text-lg text-black">Poll Results</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {options.map((option) => (
               <div key={option.id} className="p-3 border border-gray-200 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">{option.text}</span>
+                  <span className="font-medium text-black">{option.text}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500">{option.votes} votes</span>
-                    <span className="text-sm font-semibold text-blue-600">
+                    <span className="text-sm text-black">{option.votes} votes</span>
+                    <span className="text-sm font-semibold text-black">
                       {getVotePercentage(option.votes, totalVotes)}%
                     </span>
                   </div>
@@ -86,15 +86,15 @@ export function VotingForm({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
+          <CardTitle className="text-lg flex items-center gap-2 text-black">
             📊 Vote Results
           </CardTitle>
         </CardHeader>
         <CardContent>
           {/* Results Header */}
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-semibold text-blue-800 mb-2">Current Results</h4>
-            <p className="text-blue-600 text-sm">
+          <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <h4 className="font-semibold text-black mb-2">Current Results</h4>
+            <p className="text-black text-sm">
               Based on {totalVotes} total votes
             </p>
           </div>

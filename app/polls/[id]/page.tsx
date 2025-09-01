@@ -10,6 +10,7 @@ import Link from "next/link";
 import { samplePolls } from "@/src/lib/sample-polls";
 import { Poll } from "@/src/types/poll";
 import { VotingForm } from "@/src/components/polls/VotingForm";
+import { createClient } from "@/lib/supabase/client";
 
 export default function PollDetailPage() {
   const params = useParams();
@@ -21,14 +22,38 @@ export default function PollDetailPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Find poll from mock data
-    const foundPoll = samplePolls.find(p => p.id === pollId);
-    if (foundPoll) {
-      setPoll(foundPoll);
-      // Simulate current user for demo
-      setCurrentUserId("alx_admin");
-    }
-    setLoading(false);
+    const fetchPollAndUser = async () => {
+      setLoading(true);
+      const supabase = createClient();
+
+      // Fetch user session
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+      }
+
+      // Fetch poll data
+      const { data: foundPoll, error } = await supabase
+        .from('polls')
+        .select(
+          `
+          *,
+          options (*)
+          `
+        )
+        .eq('id', pollId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching poll:", error);
+        setPoll(null);
+      } else if (foundPoll) {
+        setPoll(foundPoll as Poll);
+      }
+      setLoading(false);
+    };
+
+    fetchPollAndUser();
   }, [pollId]);
 
   const formatDate = (dateString: string | undefined) => {

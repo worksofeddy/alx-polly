@@ -31,3 +31,17 @@ export interface VoteData {
   pollId: string;
   optionIds: string[];
 }
+
+export interface PollOptionEdit {
+  id?: string;
+  text: string;
+  isNew?: boolean;
+}
+
+export interface EditPollData {
+  id: string;
+  title: string;
+  description: string;
+  options: PollOptionEdit[];
+  endDate?: string;
+}

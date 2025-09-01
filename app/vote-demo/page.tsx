@@ -59,8 +59,8 @@ export default function VoteDemoPage() {
 
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Voting Form Demo</h1>
-        <p className="text-gray-600 mb-6">
+        <h1 className="text-3xl font-bold text-black mb-4">Voting Form Demo</h1>
+        <p className="text-black mb-6">
           Interactive demonstration of the voting form component
         </p>
         <Button onClick={switchPoll} variant="outline">
@@ -87,7 +87,7 @@ export default function VoteDemoPage() {
 
       {/* Features List */}
       <div className="mt-12 max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+        <h2 className="text-2xl font-bold text-black mb-6 text-center">
           Voting Form Features
         </h2>
         <div className="grid md:grid-cols-2 gap-6">
@@ -96,7 +96,7 @@ export default function VoteDemoPage() {
               <CardTitle className="text-lg">🎯 Single Choice Voting</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-black">
                 <li>• Radio button selection</li>
                 <li>• One option per vote</li>
                 <li>• Clear visual feedback</li>

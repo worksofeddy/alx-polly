@@ -30,16 +30,16 @@ export function Navigation() {
   };
 
   return (
-    <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="border-b border-gray-200 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo/Brand */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">P</span>
+              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">P</span>
               </div>
-              <span className="font-bold text-xl">ALX Polly</span>
+              <span className="font-bold text-xl text-black">ALX Polly</span>
             </Link>
           </div>
 
@@ -47,24 +47,24 @@ export function Navigation() {
           <div className="hidden md:flex items-center space-x-8">
             <Link
               href="/"
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                isActive("/") ? "text-primary" : "text-muted-foreground"
+              className={`text-sm font-medium transition-colors hover:text-black ${
+                isActive("/") ? "text-black" : "text-gray-600"
               }`}
             >
               Home
             </Link>
             <Link
               href="/polls/create"
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                isActive("/polls/create") ? "text-primary" : "text-muted-foreground"
+              className={`text-sm font-medium transition-colors hover:text-black ${
+                isActive("/polls/create") ? "text-black" : "text-gray-600"
               }`}
             >
               Create Poll
             </Link>
             <Link
               href="/polls"
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                pathname.startsWith("/polls") && !isActive("/polls/create") ? "text-primary" : "text-muted-foreground"
+              className={`text-sm font-medium transition-colors hover:text-black ${
+                pathname.startsWith("/polls") && !isActive("/polls/create") ? "text-black" : "text-gray-600"
               }`}
             >
               Browse Polls
@@ -98,12 +98,12 @@ export function Navigation() {
             ) : (
               <>
                 <Link href="/auth/login">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="border-black text-black hover:bg-black hover:text-white">
                     Sign In
                   </Button>
                 </Link>
                 <Link href="/auth/register">
-                  <Button size="sm">
+                  <Button size="sm" className="bg-black hover:bg-gray-800">
                     Sign Up
                   </Button>
                 </Link>

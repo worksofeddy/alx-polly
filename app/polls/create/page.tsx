@@ -97,8 +97,8 @@ export default function CreatePollPage() {
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Create New Poll</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl text-black">Create New Poll</CardTitle>
+            <CardDescription className="text-black">
               Create a new poll for others to vote on
             </CardDescription>
           </CardHeader>
@@ -106,7 +106,7 @@ export default function CreatePollPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Poll Title */}
               <div className="space-y-2">
-                <Label htmlFor="title">Poll Title *</Label>
+                <Label htmlFor="title" className="text-black">Poll Title *</Label>
                 <Input
                   id="title"
                   value={title}
@@ -118,7 +118,7 @@ export default function CreatePollPage() {
 
               {/* Poll Description */}
               <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
+                <Label htmlFor="description" className="text-black">Description *</Label>
                 <Textarea
                   id="description"
                   value={description}
@@ -131,7 +131,7 @@ export default function CreatePollPage() {
 
               {/* Category */}
               <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category" className="text-black">Category</Label>
                 <select
                   id="category"
                   value={category}
@@ -149,7 +149,7 @@ export default function CreatePollPage() {
 
               {/* End Date */}
               <div className="space-y-2">
-                <Label htmlFor="endDate">End Date (Optional)</Label>
+                <Label htmlFor="endDate" className="text-black">End Date (Optional)</Label>
                 <Input
                   id="endDate"
                   type="datetime-local"
@@ -167,12 +167,12 @@ export default function CreatePollPage() {
                   onChange={(e) => setAllowMultipleVotes(e.target.checked)}
                   className="rounded"
                 />
-                <Label htmlFor="multipleVotes">Allow multiple votes per user</Label>
+                <Label htmlFor="multipleVotes" className="text-black">Allow multiple votes per user</Label>
               </div>
 
               {/* Poll Options */}
               <div className="space-y-4">
-                <Label>Poll Options *</Label>
+                <Label className="text-black">Poll Options *</Label>
                 {options.map((option, index) => (
                   <div key={index} className="flex items-center space-x-2">
                     <Input

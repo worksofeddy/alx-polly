@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Plus, X, CheckCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { samplePolls } from "@/src/lib/sample-polls";
+import { EditPollData, PollOptionEdit } from "@/src/types/poll";
 
 export default function EditPollPage() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function EditPollPage() {
   
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [options, setOptions] = useState<{ id?: string; text: string; isNew?: boolean }[]>([]);
+  const [options, setOptions] = useState<PollOptionEdit[]>([]);
   const [endDate, setEndDate] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,14 +91,16 @@ export default function EditPollPage() {
     setIsSubmitting(true);
 
     try {
-      // Simulate updating a poll (in real app, this would update the database)
-      console.log("Updating poll:", {
+      const updatedPoll: EditPollData = {
         id: pollId,
         title,
         description,
         options: options.filter(opt => opt.text.trim()),
-        endDate
-      });
+        endDate: endDate || undefined
+      };
+
+      // Simulate updating a poll (in real app, this would update the database)
+      console.log("Updating poll:", updatedPoll);
 
       // Show success message
       setShowSuccess(true);

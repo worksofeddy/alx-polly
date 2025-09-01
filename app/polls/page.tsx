@@ -42,8 +42,8 @@ export default function PollsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Active Polls</h1>
-          <p className="text-gray-600 mt-2">Vote on current polls and see results</p>
+          <h1 className="text-3xl font-bold text-black">Active Polls</h1>
+          <p className="text-black mt-2">Vote on current polls and see results</p>
         </div>
         <div className="flex gap-2">
           <Link href="/vote-demo">
@@ -78,7 +78,7 @@ export default function PollsPage() {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <CardTitle className="text-lg mb-2">{poll.title}</CardTitle>
-                  <CardDescription className="text-sm text-gray-600 mb-3">
+                  <CardDescription className="text-sm text-black mb-3">
                     {poll.description}
                   </CardDescription>
                 </div>
@@ -88,7 +88,7 @@ export default function PollsPage() {
               </div>
               
               {/* Poll Metadata */}
-              <div className="flex items-center gap-4 text-xs text-gray-500">
+              <div className="flex items-center gap-4 text-xs text-black">
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   <span>Expires: {formatDate(poll.expiresAt)}</span>
